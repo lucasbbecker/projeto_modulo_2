@@ -1,2 +1,14 @@
 [19-02-2025 09:19:30.751 PM] info: 	O servidor está rodando em http://localhost:3000
 [02-03-2025 01:26:48.285 AM] info: 	Servidor rodando na porta 3000
+[02-03-2025 02:21:48.211 AM] info: 	Servidor rodando na porta 3000
+[02-03-2025 10:49:46.939 AM] info: 	Servidor rodando na porta 3000
+[02-03-2025 11:10:50.939 AM] info: 	Servidor rodando na porta 3000
+[02-03-2025 11:19:47.625 AM] info: 	Servidor rodando na porta 3000
+[02-03-2025 11:20:05.601 AM] info: 	Servidor rodando na porta 3000
+[02-03-2025 11:22:42.826 AM] info: 	Servidor rodando na porta 3000
+[02-03-2025 11:32:26.163 AM] info: 	Servidor rodando na porta 3000
+[02-03-2025 11:32:53.474 AM] info: 	Servidor rodando na porta 3000
+[02-03-2025 01:22:22.927 PM] info: 	Servidor rodando na porta 3000
+[02-03-2025 01:22:29.332 PM] info: 	Servidor rodando na porta 3000
+[02-03-2025 01:23:47.430 PM] info: 	Servidor rodando na porta 3000
+[02-03-2025 01:24:47.243 PM] info: 	Servidor rodando na porta 3000
