@@ -1,4 +1,4 @@
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne } from "typeorm";
+import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, UpdateDateColumn, CreateDateColumn } from "typeorm";
 import { Branch } from "./Branch";
 import { Product } from "./Product";
 
@@ -19,10 +19,10 @@ export class Movement {
   @Column({ type: "enum", enum: MovementStatus, default: MovementStatus.PENDING })
   status: MovementStatus;
 
-  @Column({ type: "timestamp", default: () => "CURRENT_TIMESTAMP" })
+  @CreateDateColumn({ type: "timestamp"})
   created_at: Date;
 
-  @Column({ type: "timestamp", default: () => "CURRENT_TIMESTAMP" })
+  @UpdateDateColumn({ type: "timestamp"})
   updated_at: Date;
 
   @ManyToOne(() => Branch, (branch) => branch.movements)

@@ -1,4 +1,4 @@
-import { Entity, Column, PrimaryGeneratedColumn, OneToOne, JoinColumn } from "typeorm";
+import { Entity, Column, PrimaryGeneratedColumn, OneToOne, UpdateDateColumn, CreateDateColumn } from "typeorm";
 import { Driver } from "./Driver";
 import { Branch } from "./Branch";
 
@@ -13,22 +13,25 @@ export class User {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ type: "enum", enum: UserProfile, default: UserProfile.DRIVER })
+  @Column({ length: 200 })
+  name: string;
+
+  @Column({ type: "enum", enum: UserProfile, default: UserProfile.DRIVER, nullable: false })
   profile: UserProfile;
 
-  @Column({ length: 100, unique: true })
+  @Column({ length: 150, unique: true })
   email: string;
 
-  @Column({ length: 200 })
-  password: string;
+  @Column({ length: 150 })
+  password_hash: string;
 
   @Column({ default: true })
   status: boolean;
 
-  @Column({ type: "timestamp", default: () => "CURRENT_TIMESTAMP" })
+  @CreateDateColumn({ type: "timestamp"})
   created_at: Date;
 
-  @Column({ type: "timestamp", default: () => "CURRENT_TIMESTAMP" })
+  @UpdateDateColumn({ type: "timestamp"})
   updated_at: Date;
 
   @OneToOne(() => Driver, (driver) => driver.user)

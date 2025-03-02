@@ -1,4 +1,4 @@
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, OneToMany } from "typeorm";
+import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, OneToMany, UpdateDateColumn, CreateDateColumn } from "typeorm";
 import { Branch } from "./Branch";
 import { Movement } from "./Movement";
 
@@ -10,7 +10,7 @@ export class Product {
   @Column({ length: 200 })
   name: string;
 
-  @Column()
+  @Column({ nullable: false })
   amount: number;
 
   @Column({ length: 200 })
@@ -19,10 +19,10 @@ export class Product {
   @Column({ length: 200, nullable: true })
   url_cover: string;
 
-  @Column({ type: "timestamp", default: () => "CURRENT_TIMESTAMP" })
+  @CreateDateColumn({ type: "timestamp"})
   created_at: Date;
 
-  @Column({ type: "timestamp", default: () => "CURRENT_TIMESTAMP" })
+  @UpdateDateColumn({ type: "timestamp"})
   updated_at: Date;
 
   @ManyToOne(() => Branch, (branch) => branch.products)

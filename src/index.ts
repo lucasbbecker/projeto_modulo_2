@@ -1,23 +1,17 @@
-require("dotenv").config();
-
+import 'dotenv/config';
 import "reflect-metadata";
-import express from "express";
+import express, { NextFunction, Request, Response } from "express";
 import { AppDataSource } from "./data-source";
-
 import cors from "cors";
-
 import userRouter from "./routes/user.routes";
-
 import { handleError } from "./middlewares/handleError";
-
 import authRouter from "./routes/auth.routes";
 import logger from "./config/winston";
 
 const app = express();
 
-app.use(cors()); // Permite que o express entenda requisições de outros domínios
-
-app.use(express.json()); // Permite que o express entenda JSON
+app.use(cors());
+app.use(express.json());
 
 app.use("/users", userRouter);
 app.use("/login", authRouter);
@@ -31,12 +25,24 @@ app.get("/env", (req, res) => {
 
 app.use(handleError);
 
+app.use((req: Request, res: Response) => {
+  res.status(404).json({ message: "Rota não encontrada" });
+});
+
+app.use((error: Error, req: Request, res: Response, next: NextFunction) => {
+  logger.error(`Erro não tratado: ${error.message}`, { error });
+  res.status(500).json({ message: "Ocorreu um erro interno no servidor" });
+});
+
 AppDataSource.initialize()
   .then(() => {
     app.listen(process.env.PORT, () => {
       logger.info(
-        `O servidor está rodando em http://localhost:${process.env.PORT}`
+        `Servidor rodando na porta ${process.env.PORT}`
       );
     });
   })
-  .catch((error) => console.log(error));
+  .catch((error) => {
+    logger.error("Erro na conexão com o banco de dados:", error);
+    process.exit(1);
+  });

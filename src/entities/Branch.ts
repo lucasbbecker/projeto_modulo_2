@@ -1,4 +1,4 @@
-import { Entity, Column, PrimaryGeneratedColumn, OneToOne, JoinColumn, OneToMany } from "typeorm";
+import { Entity, Column, PrimaryGeneratedColumn, OneToOne, JoinColumn, OneToMany, UpdateDateColumn, CreateDateColumn } from "typeorm";
 import { User } from "./User";
 import { Product } from "./Product";
 import { Movement } from "./Movement";
@@ -14,10 +14,10 @@ export class Branch {
   @Column({ length: 30 })
   document: string;
 
-  @Column({ type: "timestamp", default: () => "CURRENT_TIMESTAMP" })
+  @CreateDateColumn({ type: "timestamp"})
   created_at: Date;
 
-  @Column({ type: "timestamp", default: () => "CURRENT_TIMESTAMP" })
+  @UpdateDateColumn({ type: "timestamp"})
   updated_at: Date;
 
   @OneToOne(() => User, (user) => user.branch)

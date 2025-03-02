@@ -1,4 +1,4 @@
-import { Entity, Column, PrimaryGeneratedColumn, OneToOne, JoinColumn } from "typeorm";
+import { Entity, Column, PrimaryGeneratedColumn, OneToOne, JoinColumn, UpdateDateColumn, CreateDateColumn } from "typeorm";
 import { User } from "./User";
 
 @Entity()
@@ -6,16 +6,16 @@ export class Driver {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ length: 30 })
-  document: string;
-
   @Column({ length: 255, nullable: true })
   full_address: string;
 
-  @Column({ type: "timestamp", default: () => "CURRENT_TIMESTAMP" })
+  @Column({ length: 30 })
+  document: string;
+
+  @CreateDateColumn({ type: "timestamp"})
   created_at: Date;
 
-  @Column({ type: "timestamp", default: () => "CURRENT_TIMESTAMP" })
+  @UpdateDateColumn({ type: "timestamp"})
   updated_at: Date;
 
   @OneToOne(() => User, (user) => user.driver)
