@@ -8,8 +8,6 @@ export const updateUserSchema = z.object({
     const cleanedDoc = doc.replace(/\D/g, "");
     return cleanedDoc.length === 11 || cleanedDoc.length === 14;
   }, "Documento inválido (CPF ou CNPJ)")
-
-  
 });
 
 export const updateStatusSchema = z.object({
