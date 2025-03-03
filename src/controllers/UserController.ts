@@ -135,4 +135,28 @@ export class UserController {
       }
     }
   }
+  async updateUserStatus(req: Request, res: Response): Promise<void> {
+    try {
+      const userId = parseInt(req.params.id);
+      const body = z.object({ status: z.boolean() }).parse(req.body);
+
+      const updatedUser = await userService.updateUserStatus(
+        userId,
+        body.status,
+        req.user
+      );
+
+      res.status(200).json(updatedUser);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ message: "Dados inválidos", errors: error.errors });
+      } else if (error instanceof Error && error.message === "Acesso negado") {
+        res.status(403).json({ message: "Acesso negado" });
+      } else if (error instanceof Error && error.message === "Usuário não encontrado") {
+        res.status(404).json({ message: "Usuário não encontrado" });
+      } else {
+        res.status(500).json({ message: "Erro interno" });
+      }
+    }
+  }
 };

@@ -35,5 +35,11 @@ router.put(
   userController.updateUser
 );
 
+router.patch(
+  "/:id/status",
+  authMiddleware,       
+  adminMiddleware,
+  userController.updateUserStatus
+);
 
 export default router;

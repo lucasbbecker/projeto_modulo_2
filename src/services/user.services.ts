@@ -12,7 +12,9 @@ export const userService = {
       query.where("user.profile = :profile", { profile });
     }
 
-    return query.select(["user.id", "user.name", "user.status", "user.profile"]).getMany();
+    return query
+      .select(["user.id", "user.name", "user.status", "user.profile"])
+      .getMany();
   },
 
   getUserById: async (userId: number, loggedUser: any) => {
@@ -24,10 +26,7 @@ export const userService = {
 
     if (!user) return null;
 
-    if (
-      loggedUser.profile !== UserProfile.ADMIN &&
-      loggedUser.id !== userId
-    ) {
+    if (loggedUser.profile !== UserProfile.ADMIN && loggedUser.id !== userId) {
       throw new Error("Acesso negado");
     }
 
@@ -41,9 +40,9 @@ export const userService = {
   },
   updateUser: async (userId: number, updateData: any, loggedUser: any) => {
     const userRepository = AppDataSource.getRepository(User);
-    const user = await userRepository.findOne({ 
+    const user = await userRepository.findOne({
       where: { id: userId },
-      relations: ["driver", "branch"]
+      relations: ["driver", "branch"],
     });
 
     if (!user) throw new Error("Usuário não encontrado");
@@ -58,11 +57,13 @@ export const userService = {
 
     // Atualiza Driver ou Branch
     if (user.profile === UserProfile.DRIVER && user.driver) {
-      if (updateData.full_address) user.driver.full_address = updateData.full_address;
+      if (updateData.full_address)
+        user.driver.full_address = updateData.full_address;
       if (updateData.document) user.driver.document = updateData.document;
       await AppDataSource.getRepository(Driver).save(user.driver);
     } else if (user.profile === UserProfile.BRANCH && user.branch) {
-      if (updateData.full_address) user.branch.full_address = updateData.full_address;
+      if (updateData.full_address)
+        user.branch.full_address = updateData.full_address;
       if (updateData.document) user.branch.document = updateData.document;
       await AppDataSource.getRepository(Branch).save(user.branch);
     }
@@ -91,6 +92,37 @@ export const userService = {
         full_address: updatedUser.branch.full_address,
         document: updatedUser.branch.document,
       }),
+    };
+  },
+  updateUserStatus: async (
+    userId: number,
+    newStatus: boolean,
+    loggedUser: any
+  ) => {
+    const userRepository = AppDataSource.getRepository(User);
+
+    const userToUpdate = await userRepository.findOne({
+      where: { id: userId },
+    });
+    if (!userToUpdate) throw new Error("Usuário não encontrado");
+
+    if (loggedUser.profile !== UserProfile.ADMIN) {
+      throw new Error("Acesso negado");
+    }
+
+    if (userToUpdate.id === loggedUser.id) {
+      throw new Error("Acesso negado");
+    }
+
+    // Atualiza o status
+    userToUpdate.status = newStatus;
+    await userRepository.save(userToUpdate);
+
+    return {
+      id: userToUpdate.id,
+      name: userToUpdate.name,
+      profile: userToUpdate.profile,
+      status: userToUpdate.status,
     };
   },
 };
