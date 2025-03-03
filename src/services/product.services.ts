@@ -1,6 +1,7 @@
 import { AppDataSource } from "../data-source";
 import { Product } from "../entities/Product";
 import { Branch } from "../entities/Branch";
+import { ProductResponse } from "../types/ProductResponse";
 
 export const productService = {
   createProduct: async (productData: any, branchId: number) => {
@@ -31,5 +32,39 @@ export const productService = {
         name: branch.user?.name,
       },
     };
+  },
+  listProducts: async (branchId?: number): Promise<ProductResponse[]> => {
+    const productRepository = AppDataSource.getRepository(Product);
+    const query = productRepository
+      .createQueryBuilder("product")
+      .leftJoinAndSelect("product.branch", "branch")
+      .leftJoinAndSelect("branch.user", "user") // Carrega o usuário da filial
+      .select([
+        "product.id",
+        "product.name",
+        "product.amount",
+        "product.description",
+        "product.url_cover",
+        "branch.id",
+        "user.name", // Nome da filial (via user.name)
+      ]);
+
+    if (branchId) {
+      query.where("branch.id = :branchId", { branchId });
+    }
+
+    const products = await query.getMany();
+
+    return products.map((product) => ({
+      id: product.id,
+      name: product.name,
+      amount: product.amount,
+      description: product.description,
+      url_cover: product.url_cover || undefined, // Trata null como undefined
+      branch: {
+        id: product.branch.id,
+        name: product.branch.user.name, // Nome da filial
+      },
+    }));
   },
 };

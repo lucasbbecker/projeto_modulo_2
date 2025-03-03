@@ -10,4 +10,10 @@ router.post(
   productsController.createProduct
 );
 
+router.get(
+    "/",
+    authMiddleware,
+    productsController.listProducts
+);
+
 export default router;

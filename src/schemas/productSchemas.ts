@@ -6,3 +6,7 @@ export const createProductSchema = z.object({
   description: z.string().min(1,"Descrição é obrigatória"),
   url_cover: z.string().optional(),
 });
+
+export const listProductsSchema = z.object({
+    branch_id: z.number().int().positive().optional(), // Filtro para ADMIN
+  });
