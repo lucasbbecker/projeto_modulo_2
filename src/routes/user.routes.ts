@@ -1,5 +1,6 @@
 import express from "express";
 import { UserController } from "../controllers/UserController";
+import { validateUserPermission } from "../middlewares/validateUserPermission";
 import { adminMiddleware } from "../middlewares/adminMiddleware";
 import { authMiddleware } from "../middlewares/auth"; 
 
@@ -18,6 +19,13 @@ router.get(
   authMiddleware,
   adminMiddleware,
   userController.listUsers
-)
+);
+
+router.get(
+  "/:id",
+  authMiddleware,              
+  validateUserPermission,
+  userController.getUserById
+);
 
 export default router;

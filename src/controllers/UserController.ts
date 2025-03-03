@@ -100,4 +100,18 @@ export class UserController {
       res.status(500).json({ message: "Erro interno" });
     }
   }
+  async getUserById(req: Request, res: Response): Promise<void> {
+    try {
+      const userId = parseInt(req.params.id);
+      const user = await userService.getUserById(userId, req.user);
+
+      if (!user) {
+        res.status(404).json({ message: "Usuário não encontrado" })
+        return;
+      }
+      res.status(200).json(user);
+    } catch (error) {
+      res.status(500).json({ message: "Erro interno" });
+    }
+  }
 };
