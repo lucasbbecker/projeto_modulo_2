@@ -26,26 +26,19 @@ export class UserController {
   async createUser(req: Request, res: Response): Promise<void> {
     try {
       const userRepository = AppDataSource.getRepository(User);
-      console.log("Iniciando criação de usuário...");
       const body = createUserSchema.parse(req.body);
   
-      console.log("Verificando email existente...");
       const existingUser = await userRepository.findOne({ 
         where: { email: body.email } 
       });
   
       if (existingUser) {
-        console.log("Email já existe:", body.email);
         res.status(409).json({ message: "Email já cadastrado" });
         return;
       }
-  
-      console.log("Gerando hash da senha...");
       const hashedPassword = await hash(body.password, 8);
   
-      console.log("Iniciando transação...");
       const user = await AppDataSource.transaction(async (transactionalEntityManager) => {
-        console.log("Salvando usuário...");
         const user = await transactionalEntityManager.save(User, {
           name: body.name,
           profile: body.profile,
@@ -53,8 +46,6 @@ export class UserController {
           password_hash: hashedPassword,
           status: true,
         });
-  
-        console.log("Salvando perfil específico...");
         if (body.profile === UserProfile.DRIVER) {
           await transactionalEntityManager.save(Driver, {
             full_address: body.full_address,

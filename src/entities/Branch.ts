@@ -27,6 +27,9 @@ export class Branch {
   @OneToMany(() => Product, (product) => product.branch)
   products: Product[];
 
-  @OneToMany(() => Movement, (movement) => movement.destination_branch)
-  movements: Movement[];
+  @OneToMany(() => Movement, (movement) => movement.sourceBranch)
+  movementsFrom: Movement[];
+
+  @OneToMany(() => Movement, (movement) => movement.destinationBranch)
+  movementsTo: Movement[];
 }

@@ -31,3 +31,4 @@
 [03-03-2025 04:06:15.154 PM] info: 	Servidor rodando na porta 3000
 [03-03-2025 04:07:59.581 PM] info: 	Servidor rodando na porta 3000
 [03-03-2025 04:40:36.783 PM] info: 	Servidor rodando na porta 3000
+[03-03-2025 05:24:52.007 PM] info: 	Servidor rodando na porta 3000
