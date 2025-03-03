@@ -13,4 +13,11 @@ router.post(
   userController.createUser
 );
 
+router.get(
+  "/",
+  authMiddleware,
+  adminMiddleware,
+  userController.listUsers
+)
+
 export default router;

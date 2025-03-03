@@ -1,15 +1,15 @@
 import { Request, Response } from "express";
 import { AppDataSource } from "../data-source";
-import { User, UserProfile } from "../entities/User"; // Importe o enum
+import { User, UserProfile } from "../entities/User";
+import { userService } from "../services/user.services";
 import { Driver } from "../entities/Driver";
 import { Branch } from "../entities/Branch";
 import { hash } from "bcryptjs";
 import { z } from "zod";
 
-// Esquema de validação
 const createUserSchema = z.object({
   name: z.string().min(1),
-  profile: z.nativeEnum(UserProfile), // Use o enum no Zod
+  profile: z.nativeEnum(UserProfile),
   email: z.string().email(),
   password: z.string().min(6),
   document: z.string().refine((doc) => {
@@ -25,7 +25,7 @@ export class UserController {
   async createUser(req: Request, res: Response): Promise<void> {
     try {
       const userRepository = AppDataSource.getRepository(User);
-      console.log("Iniciando criação de usuário..."); // 👈 Log de depuração
+      console.log("Iniciando criação de usuário...");
       const body = createUserSchema.parse(req.body);
   
       console.log("Verificando email existente...");
@@ -79,7 +79,7 @@ export class UserController {
       });
   
     } catch (error) {
-      console.error("Erro completo:", error); // 👈 Log detalhado
+      console.error("Erro:", error);
       if (error instanceof z.ZodError) {
         res.status(400).json({
           message: "Dados inválidos",
@@ -90,4 +90,14 @@ export class UserController {
       }
     }
   }
-}
+
+  async listUsers(req: Request, res: Response): Promise<void> {
+    try {
+      const { profile } = req.query;
+      const users = await userService.listUsers(profile as UserProfile);
+      res.status(200).json(users);
+    } catch (error) {
+      res.status(500).json({ message: "Erro interno" });
+    }
+  }
+};
