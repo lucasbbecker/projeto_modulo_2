@@ -1,6 +1,8 @@
 import { Request, Response } from "express";
 import { AppDataSource } from "../data-source";
-import { User } from "../entities/User";
+import { User, UserProfile } from "../entities/User"; // Importe o enum UserProfile
+import { Branch } from "../entities/Branch";
+import { Driver } from "../entities/Driver";
 import { compare } from "bcryptjs";
 import { sign } from "jsonwebtoken";
 import { z } from "zod";
@@ -11,68 +13,75 @@ const loginSchema = z.object({
 });
 
 export class AuthController {
-  
-
   async login(req: Request, res: Response): Promise<void> {
     try {
-
-      const userRepository = AppDataSource.getRepository(User);  
-      console.log("Iniciando processo de login...");
-      console.log("Dados recebidos:", req.body);
+      const userRepository = AppDataSource.getRepository(User);
+      const branchRepository = AppDataSource.getRepository(Branch);
+      const driverRepository = AppDataSource.getRepository(Driver);
 
       // Validação dos dados
       const { email, password } = loginSchema.parse(req.body);
-      console.log("Email validado:", email);
 
-      // Buscar usuário com segurança
-      console.log("Buscando usuário no banco...");
+      // Buscar usuário
       const user = await userRepository.findOne({
         where: { email },
         select: ["id", "email", "password_hash", "profile", "name"],
       });
 
       if (!user) {
-        console.log("Usuário não encontrado para o email:", email);
         res.status(401).json({ message: "Credenciais inválidas" });
         return;
       }
 
-      console.log("Usuário encontrado:", user.id);
-      console.log("Hash armazenado:", user.password_hash?.slice(0, 12) + "...");
-
-      // Verificação de senha
-      console.log("Comparando senhas...");
+      // Verificar senha
       const passwordMatch = await compare(password, user.password_hash);
-      
       if (!passwordMatch) {
-        console.log("Senha não corresponde para o usuário:", user.id);
         res.status(401).json({ message: "Credenciais inválidas" });
         return;
       }
 
-      // Verificação do JWT_SECRET
+      // Buscar branchId ou driverId (se aplicável)
+      let branchId: number | undefined;
+      let driverId: number | undefined;
+
+      if (user.profile === UserProfile.BRANCH) {
+        const branch = await branchRepository.findOne({
+          where: { user: { id: user.id } },
+          select: ["id"],
+        });
+        branchId = branch?.id;
+      } else if (user.profile === UserProfile.DRIVER) {
+        const driver = await driverRepository.findOne({
+          where: { user: { id: user.id } },
+          select: ["id"],
+        });
+        driverId = driver?.id;
+      }
+
+      // Verificar JWT_SECRET
       if (!process.env.JWT_SECRET) {
-        console.error("Erro crítico: JWT_SECRET não está definido!");
         throw new Error("Variável de ambiente JWT_SECRET não configurada");
       }
 
-      // Geração do token
-      console.log("Gerando token JWT...");
-      const token = sign(
-        {
-          id: user.id,
-          profile: user.profile,
-          name: user.name
-        },
-        process.env.JWT_SECRET,
-        { expiresIn: "8h" }
-      );
+      // Gerar token
+      const tokenPayload: Record<string, any> = {
+        id: user.id,
+        profile: user.profile,
+        name: user.name,
+      };
 
-      console.log("Login bem-sucedido para:", user.email);
+      // Adicionar IDs apenas se existirem
+      if (branchId) tokenPayload.branchId = branchId;
+      if (driverId) tokenPayload.driverId = driverId;
+
+      const token = sign(tokenPayload, process.env.JWT_SECRET, {
+        expiresIn: "8h",
+      });
+
       res.status(200).json({
         token,
         name: user.name,
-        profile: user.profile
+        profile: user.profile,
       });
 
     } catch (error) {
