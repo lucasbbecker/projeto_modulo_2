@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { AppDataSource } from "../data-source";
 import { User, UserProfile } from "../entities/User";
 import { userService } from "../services/user.services";
+import { updateUserSchema } from "../schemas/userSchemas";
 import { Driver } from "../entities/Driver";
 import { Branch } from "../entities/Branch";
 import { hash } from "bcryptjs";
@@ -112,6 +113,26 @@ export class UserController {
       res.status(200).json(user);
     } catch (error) {
       res.status(500).json({ message: "Erro interno" });
+    }
+  }
+  async updateUser(req: Request, res: Response): Promise<void> {
+    try {
+      const userId = parseInt(req.params.id);
+      const body = updateUserSchema.parse(req.body);
+
+      const updatedUser = await userService.updateUser(userId, body, req.user);
+      res.status(200).json(updatedUser);
+
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ message: "Dados inválidos", errors: error.errors });
+      } else if (error instanceof Error && error.message === "Acesso negado") {
+        res.status(403).json({ message: "Acesso negado" });
+      } else if (error instanceof Error && error.message === "Usuário não encontrado") {
+        res.status(404).json({ message: "Usuário não encontrado" });
+      } else {
+        res.status(500).json({ message: "Erro interno" });
+      }
     }
   }
 };

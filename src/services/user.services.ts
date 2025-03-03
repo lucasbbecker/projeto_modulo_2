@@ -1,5 +1,7 @@
 import { AppDataSource } from "../data-source";
 import { User, UserProfile } from "../entities/User";
+import { Driver } from "../entities/Driver";
+import { Branch } from "../entities/Branch";
 
 export const userService = {
   listUsers: async (profile?: UserProfile) => {
@@ -35,6 +37,60 @@ export const userService = {
       status: user.status,
       full_address: user.branch?.full_address || user.driver?.full_address,
       profile: user.profile,
+    };
+  },
+  updateUser: async (userId: number, updateData: any, loggedUser: any) => {
+    const userRepository = AppDataSource.getRepository(User);
+    const user = await userRepository.findOne({ 
+      where: { id: userId },
+      relations: ["driver", "branch"]
+    });
+
+    if (!user) throw new Error("Usuário não encontrado");
+
+    // Verifica permissão (mesma lógica anterior)
+    if (loggedUser.profile !== UserProfile.ADMIN && loggedUser.id !== userId) {
+      throw new Error("Acesso negado");
+    }
+
+    // Atualiza campos do User
+    if (updateData.name) user.name = updateData.name;
+
+    // Atualiza Driver ou Branch
+    if (user.profile === UserProfile.DRIVER && user.driver) {
+      if (updateData.full_address) user.driver.full_address = updateData.full_address;
+      if (updateData.document) user.driver.document = updateData.document;
+      await AppDataSource.getRepository(Driver).save(user.driver);
+    } else if (user.profile === UserProfile.BRANCH && user.branch) {
+      if (updateData.full_address) user.branch.full_address = updateData.full_address;
+      if (updateData.document) user.branch.document = updateData.document;
+      await AppDataSource.getRepository(Branch).save(user.branch);
+    }
+
+    await userRepository.save(user);
+
+    // Recarrega o usuário com as relações atualizadas
+    const updatedUser = await userRepository.findOne({
+      where: { id: userId },
+      relations: ["driver", "branch"],
+    });
+
+    // Monta a resposta com os dados completos
+    if (!updatedUser) throw new Error("Erro ao atualizar o usuário");
+
+    return {
+      id: updatedUser.id,
+      name: updatedUser.name,
+      profile: updatedUser.profile,
+      status: updatedUser.status,
+      ...(updatedUser.driver && {
+        full_address: updatedUser.driver.full_address,
+        document: updatedUser.driver.document,
+      }),
+      ...(updatedUser.branch && {
+        full_address: updatedUser.branch.full_address,
+        document: updatedUser.branch.document,
+      }),
     };
   },
 };

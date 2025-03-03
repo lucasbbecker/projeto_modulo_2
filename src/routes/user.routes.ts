@@ -28,4 +28,12 @@ router.get(
   userController.getUserById
 );
 
+router.put(
+  "/:id",
+  authMiddleware,
+  validateUserPermission,
+  userController.updateUser
+);
+
+
 export default router;
