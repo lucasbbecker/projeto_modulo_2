@@ -1,6 +1,7 @@
 import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn } from "typeorm";
 import { Branch } from "./Branch";
 import { Product } from "./Product";
+import { Driver } from "./Driver";
 
 export enum MovementStatus {
   PENDING = "PENDING",
@@ -30,9 +31,8 @@ export class Movement {
   updated_at: Date;
 
   @ManyToOne(() => Branch, (branch) => branch.movementsFrom)
-  @JoinColumn({ name: "source_branch_id" }) // Nome da coluna no banco
+  @JoinColumn({ name: "source_branch_id" })
   sourceBranch: Branch;
-
   
   @ManyToOne(() => Branch, (branch) => branch.movementsTo)
   @JoinColumn({ name: "destination_branch_id" })
@@ -41,4 +41,8 @@ export class Movement {
   @ManyToOne(() => Product, (product) => product.movements)
   @JoinColumn({ name: "product_id" })
   product: Product;
+
+  @ManyToOne(() => Driver, { nullable: true })
+  @JoinColumn({ name: "driver_id" })
+  driver: Driver | null;
 }

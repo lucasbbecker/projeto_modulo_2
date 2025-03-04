@@ -1,5 +1,9 @@
 import { Request, Response } from "express";
-import { createMovementSchema } from "../schemas/movementSchema";
+import { Movement, MovementStatus } from "../entities/Movement"; // Add this line to import the Movement type
+import {
+  createMovementSchema,
+  listMovementsSchema,
+} from "../schemas/movementSchema";
 import { movementService } from "../services/movement.services";
 import { UserProfile } from "../entities/User";
 import { z } from "zod";
@@ -8,8 +12,12 @@ export const movementsController = {
   async createMovement(req: Request, res: Response): Promise<void> {
     try {
       const body = createMovementSchema.parse(req.body);
-      
-      if (!req.user || req.user.profile !== UserProfile.BRANCH || !req.user.branch.id) {
+
+      if (
+        !req.user ||
+        req.user.profile !== UserProfile.BRANCH ||
+        !req.user.branch.id
+      ) {
         res.status(403).json({ message: "Acesso negado" });
         return;
       }
@@ -20,18 +28,82 @@ export const movementsController = {
       });
 
       res.status(201).json(movement);
-
     } catch (error) {
       if (error instanceof z.ZodError) {
-        res.status(400).json({ message: "Dados inválidos", errors: (error as z.ZodError).errors });
-      } else if (error instanceof Error && error.message === "Produto não encontrado na filial de origem") {
+        res.status(400).json({
+          message: "Dados inválidos",
+          errors: (error as z.ZodError).errors,
+        });
+      } else if (
+        error instanceof Error &&
+        error.message === "Produto não encontrado na filial de origem"
+      ) {
         res.status(404).json({ message: error.message });
-      } else if (error instanceof Error && error.message === "Estoque insuficiente") {
+      } else if (
+        error instanceof Error &&
+        error.message === "Estoque insuficiente"
+      ) {
         res.status(400).json({ message: error.message });
-      } else if (error instanceof Error && error.message === "Filial de destino não encontrada") {
+      } else if (
+        error instanceof Error &&
+        error.message === "Filial de destino não encontrada"
+      ) {
         res.status(404).json({ message: error.message });
-      } else if (error instanceof Error && error.message === "Filial de destino inválida") {
+      } else if (
+        error instanceof Error &&
+        error.message === "Filial de destino inválida"
+      ) {
         res.status(400).json({ message: error.message });
+      } else {
+        res.status(500).json({ message: "Erro interno" });
+      }
+    }
+  },
+  listMovements: async (req: Request, res: Response): Promise<void> => {
+    try {
+      const query = listMovementsSchema.parse(req.query);
+      let movements: Movement[];
+  
+      if (!req.user) {
+        res.status(403).json({ message: "Acesso negado" });
+        return;
+      }
+      if (req.user.profile === UserProfile.DRIVER && query.status === MovementStatus.PENDING) {
+        res.status(400).json({ 
+          message: "Motoristas só podem visualizar movimentações em andamento ou finalizadas" 
+        });
+        return;
+      }
+  
+      switch (req.user.profile) {
+        case UserProfile.BRANCH:
+          if (!req.user.branch.id) {
+            res.status(403).json({ message: "Acesso negado" });
+            return;
+          }
+          movements = await movementService.listMovementsByBranch(
+            req.user.branch.id,
+            query.status
+          );
+          break;
+  
+        case UserProfile.DRIVER:
+          movements = await movementService.listMovementsByDriver(
+            req.user.id,
+            query.status
+          );
+          break;
+  
+        default:
+          res.status(403).json({ message: "Acesso negado" });
+          return;
+      }
+      res.status(200).json(movements);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        res
+          .status(400)
+          .json({ message: "Parâmetros inválidos", errors: error.errors });
       } else {
         res.status(500).json({ message: "Erro interno" });
       }
