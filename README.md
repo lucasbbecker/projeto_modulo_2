@@ -81,29 +81,14 @@ PORT=3000
 # 5. Executar migrações
 npm run migration:run
 
-# 6. Iniciar servidor
+# 6. Criar Usuário Admnistrador
+npm run seed
+
+# 7. Iniciar servidor
 npm run start
 
 ```
 
-## Criar Usuário Admnistrador
-### Altere as informações do arquivo *src/database/seedAdmin.ts* para criar o admin na base
-
-```bash
-  const adminData = {
-    name: "Admin",
-    profile: UserProfile.ADMIN,
-    email: "admin@gmail.com",
-    password: "123456", // Troque antes de usar!
-    document: "13564981631", // CPF fictício
-    status: true,
-  };
-```
-### Comando para executar o scritp:
-
-```bash
-npm run seed
-```
 
 ## Rotas da API
 
