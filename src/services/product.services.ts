@@ -2,6 +2,8 @@ import { AppDataSource } from "../data-source";
 import { Product } from "../entities/Product";
 import { Branch } from "../entities/Branch";
 import { ProductResponse } from "../types/ProductResponse";
+import { AppError } from "../utils/AppError";
+
 
 export const productService = {
   createProduct: async (productData: any, branchId: number) => {
@@ -13,7 +15,9 @@ export const productService = {
       relations: ["user"]
     });
 
-    if (!branch) throw new Error("Filial não encontrada");
+    if (!branch) {
+      throw new AppError("Filial não encontrada", 404);
+    }
 
     const product = productRepository.create({
       name: productData.name,
