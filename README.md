@@ -12,6 +12,7 @@
 - [Rotas da API](#rotas-da-api)
 - [Estrutura do Projeto](#estrutura-do-projeto)
 - [Melhorias Futuras](#melhorias-futuras)
+- [Links](#links)
 
 ## Introdução
 O **PlusHealth** é o sistema central de gestão para a rede de farmácias, responsável por:
@@ -445,6 +446,11 @@ stateDiagram-v2
 - Adicionar sistema de notificações
 - Desenvolver módulo de relatórios
 
+## Links
 
-Desenvolvido por [Lucas Becker Barbosa Lima]
+Vídeo de apresentação:
+
+	https://
+
+Desenvolvido por Lucas Becker Barbosa Lima
 Para - Módulo 2 DEVinHouse
