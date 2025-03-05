@@ -1,88 +1,34 @@
 import { Request, Response } from "express";
-import { AppDataSource } from "../data-source";
-import { User, UserProfile } from "../entities/User";
+import { UserProfile } from "../entities/User";
 import { userService } from "../services/user.services";
-import { updateUserSchema } from "../schemas/userSchemas";
-import { Driver } from "../entities/Driver";
-import { Branch } from "../entities/Branch";
-import { hash } from "bcryptjs";
+import { updateUserSchema, createUserSchema } from "../schemas/userSchemas";;
 import { z } from "zod";
 
-const createUserSchema = z.object({
-  name: z.string().min(1),
-  profile: z.nativeEnum(UserProfile),
-  email: z.string().email(),
-  password: z.string().min(6),
-  document: z.string().refine((doc) => {
-    const cleanedDoc = doc.replace(/\D/g, "");
-    return cleanedDoc.length === 11 || cleanedDoc.length === 14;
-  }, "Documento inválido (CPF ou CNPJ)"),
-  full_address: z.string().optional(),
-});
 
 export class UserController {
-  
-
   async createUser(req: Request, res: Response): Promise<void> {
     try {
-      const userRepository = AppDataSource.getRepository(User);
-      const body = createUserSchema.parse(req.body);
-  
-      const existingUser = await userRepository.findOne({ 
-        where: { email: body.email } 
-      });
-  
-      if (existingUser) {
-        res.status(409).json({ message: "Email já cadastrado" });
-        return;
-      }
-      const hashedPassword = await hash(body.password, 8);
-  
-      const user = await AppDataSource.transaction(async (transactionalEntityManager) => {
-        const user = await transactionalEntityManager.save(User, {
-          name: body.name,
-          profile: body.profile,
-          email: body.email,
-          password_hash: hashedPassword,
-          status: true,
-        });
-        if (body.profile === UserProfile.DRIVER) {
-          await transactionalEntityManager.save(Driver, {
-            full_address: body.full_address,
-            document: body.document,
-            user: user,
-          });
-        } else if (body.profile === UserProfile.BRANCH) {
-          await transactionalEntityManager.save(Branch, {
-            full_address: body.full_address,
-            document: body.document,
-            user: user,
-          });
-        }
-  
-        return user;
-      });
-  
-      console.log("Usuário criado com sucesso:", user.id);
-      res.status(201).json({
-        id: user.id,
-        name: user.name,
-        profile: user.profile,
-      });
-  
+      const validatedData = createUserSchema.parse(req.body);
+      const newUser = await userService.createUser(validatedData);
+      
+      res.status(201).json(newUser);
     } catch (error) {
-      console.error("Erro:", error);
+      console.error("Erro na criação de usuário:", error);
+      
       if (error instanceof z.ZodError) {
         res.status(400).json({
           message: "Dados inválidos",
           errors: error.errors,
         });
-      } else {
-        res.status(500).json({ message: "Erro interno" });
+      } 
+      else if (error instanceof Error && error.message === "Email já cadastrado") {
+        res.status(409).json({ message: error.message });
+      } 
+      else {
+        res.status(500).json({ message: "Erro interno no servidor" });
       }
     }
   }
-
   async listUsers(req: Request, res: Response): Promise<void> {
     try {
       const { profile } = req.query;

@@ -2,8 +2,57 @@ import { AppDataSource } from "../data-source";
 import { User, UserProfile } from "../entities/User";
 import { Driver } from "../entities/Driver";
 import { Branch } from "../entities/Branch";
+import { hash } from "bcryptjs";
+import { createUserSchema } from "../schemas/userSchemas";
+import { z } from "zod";
 
 export const userService = {
+  
+  async createUser(body: z.infer<typeof createUserSchema>) {
+    const userRepository = AppDataSource.getRepository(User);
+    
+    const existingUser = await userRepository.findOne({ 
+      where: { email: body.email } 
+    });
+
+    if (existingUser) {
+      throw new Error("Email já cadastrado");
+    }
+
+    const hashedPassword = await hash(body.password, 8);
+
+    return AppDataSource.transaction(async (transactionalEntityManager) => {
+      const user = await transactionalEntityManager.save(User, {
+        name: body.name,
+        profile: body.profile,
+        email: body.email,
+        password_hash: hashedPassword,
+        status: true,
+      });
+
+      if (body.profile === UserProfile.DRIVER) {
+        await transactionalEntityManager.save(Driver, {
+          full_address: body.full_address,
+          document: body.document,
+          user: user,
+        });
+      } 
+      else if (body.profile === UserProfile.BRANCH) {
+        await transactionalEntityManager.save(Branch, {
+          full_address: body.full_address,
+          document: body.document,
+          user: user,
+        });
+      }
+
+      return {
+        id: user.id,
+        name: user.name,
+        profile: user.profile
+      };
+    });
+  },
+
   listUsers: async (profile?: UserProfile) => {
     const userRepository = AppDataSource.getRepository(User);
     const query = userRepository.createQueryBuilder("user");
