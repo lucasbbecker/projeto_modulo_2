@@ -92,6 +92,8 @@ npm run start
 
 ## Rotas da API
 
+### O arquvivo das requisições do Insomnia está na raiz do projeto **Insomnia_projeto_modulo_2.json**
+
 ### Endpoints
 
 ### 1. Criar Usuário (Somente ADMIN)
