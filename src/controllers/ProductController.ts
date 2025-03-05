@@ -1,4 +1,4 @@
-import { Request, Response } from "express";
+import { Request, Response, NextFunction } from "express";
 import { z } from "zod";
 import { createProductSchema, listProductsSchema } from "../schemas/productSchemas";
 import { productService } from "../services/product.services";
@@ -6,7 +6,7 @@ import { UserProfile } from "../entities/User";
 import { ProductResponse } from "../types/ProductResponse";
 
 export const productsController = {
-  async createProduct(req: Request, res: Response): Promise<void> {
+  async createProduct(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const body = createProductSchema.parse(req.body);
       
@@ -19,16 +19,10 @@ export const productsController = {
       res.status(201).json(product);
 
     } catch (error) {
-      if (error instanceof z.ZodError) {
-        res.status(400).json({ message: "Dados inválidos", errors: error.errors });
-      } else if (error instanceof Error && error.message === "Filial não encontrada") {
-        res.status(404).json({ message: "Filial não encontrada" });
-      } else {
-        res.status(500).json({ message: "Erro interno" });
-      }
+      next(error);
     }
   },
-  async listProducts(req: Request, res: Response): Promise<void> {
+  async listProducts(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const query = listProductsSchema.parse(req.query);
       let products: ProductResponse[];
@@ -43,11 +37,7 @@ export const productsController = {
       }
       res.status(200).json(products);
     } catch (error) {
-      if (error instanceof z.ZodError) {
-        res.status(400).json({ message: "Parâmetros inválidos", errors: error.errors });
-      } else {
-        res.status(500).json({ message: "Erro interno" });
-      }
+      next(error);
     }
   },
 

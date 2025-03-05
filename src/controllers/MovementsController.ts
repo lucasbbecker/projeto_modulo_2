@@ -1,4 +1,4 @@
-import { Request, Response } from "express";
+import { Request, Response, NextFunction } from "express";
 import { Movement, MovementStatus } from "../entities/Movement"; // Add this line to import the Movement type
 import {
   createMovementSchema,
@@ -9,7 +9,7 @@ import { UserProfile } from "../entities/User";
 import { z } from "zod";
 
 export const movementsController = {
-  async createMovement(req: Request, res: Response): Promise<void> {
+  async createMovement(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const body = createMovementSchema.parse(req.body);
 
@@ -29,37 +29,10 @@ export const movementsController = {
 
       res.status(201).json(movement);
     } catch (error) {
-      if (error instanceof z.ZodError) {
-        res.status(400).json({
-          message: "Dados inválidos",
-          errors: (error as z.ZodError).errors,
-        });
-      } else if (
-        error instanceof Error &&
-        error.message === "Produto não encontrado na filial de origem"
-      ) {
-        res.status(404).json({ message: error.message });
-      } else if (
-        error instanceof Error &&
-        error.message === "Estoque insuficiente"
-      ) {
-        res.status(400).json({ message: error.message });
-      } else if (
-        error instanceof Error &&
-        error.message === "Filial de destino não encontrada"
-      ) {
-        res.status(404).json({ message: error.message });
-      } else if (
-        error instanceof Error &&
-        error.message === "Filial de destino inválida"
-      ) {
-        res.status(400).json({ message: error.message });
-      } else {
-        res.status(500).json({ message: "Erro interno" });
-      }
+      next(error)
     }
   },
-  listMovements: async (req: Request, res: Response): Promise<void> => {
+  listMovements: async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const query = listMovementsSchema.parse(req.query);
       let movements: Movement[];
@@ -100,16 +73,10 @@ export const movementsController = {
       }
       res.status(200).json(movements);
     } catch (error) {
-      if (error instanceof z.ZodError) {
-        res
-          .status(400)
-          .json({ message: "Parâmetros inválidos", errors: error.errors });
-      } else {
-        res.status(500).json({ message: "Erro interno" });
-      }
+      next(error)
     }
   },
-  async startMovement(req: Request, res: Response): Promise<void> {
+  async startMovement(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const movementId = parseInt(req.params.id);
   
@@ -118,33 +85,18 @@ export const movementsController = {
         return;
       }
   
-      // Passar o userId (não driverId)
       const movement = await movementService.startMovement(
         movementId,
-        req.user.id // ID do usuário logado
+        req.user.id
       );
   
       res.status(200).json(movement);  
     } catch (error) {
-      if (error instanceof Error) {
-        switch (error.message) {
-          case "Movimentação não encontrada":
-            res.status(404).json({ message: error.message });
-            break;
-          case "Status inválido para início":
-          case "Motorista não autorizado":
-            res.status(400).json({ message: error.message });
-            break;
-          default:
-            res.status(500).json({ message: "Erro interno" });
-        }
-      } else {
-        res.status(500).json({ message: "Erro interno" });
-      }
+      next(error)
     }
   },
 
-  async endMovement(req: Request, res: Response): Promise<void> {
+  async endMovement(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const movementId = parseInt(req.params.id);
   
@@ -160,21 +112,7 @@ export const movementsController = {
   
       res.status(200).json(movement);
     } catch (error) {
-      if (error instanceof Error) {
-        switch (error.message) {
-          case "Movimentação não encontrada":
-            res.status(404).json({ message: error.message });
-            break;
-          case "Status inválido para finalização":
-          case "Motorista não autorizado":
-            res.status(400).json({ message: error.message });
-            break;
-          default:
-            res.status(500).json({ message: "Erro interno" });
-        }
-      } else {
-        res.status(500).json({ message: "Erro interno" });
-      }
+      next(error)
     }
   },
 };
