@@ -3,7 +3,7 @@ export type ProductResponse = {
     name: string;
     amount: number;
     description: string;
-    url_cover?: string; // Campo opcional
+    url_cover?: string;
     branch: {
       id: number;
       name: string;

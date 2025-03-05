@@ -10,13 +10,11 @@ export const productsController = {
     try {
       const body = createProductSchema.parse(req.body);
       
-      // Verifica se é BRANCH e tem branchId no token
       if (!req.user || req.user.profile !== UserProfile.BRANCH || !req.user.branch) {
         res.status(403).json({ message: "Acesso negado" });
         return;
       }
 
-      // Passa o branchId do usuário logado
       const product = await productService.createProduct(body, req.user.branch.id);
       res.status(201).json(product);
 

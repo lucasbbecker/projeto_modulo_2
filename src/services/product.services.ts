@@ -38,7 +38,7 @@ export const productService = {
     const query = productRepository
       .createQueryBuilder("product")
       .leftJoinAndSelect("product.branch", "branch")
-      .leftJoinAndSelect("branch.user", "user") // Carrega o usuário da filial
+      .leftJoinAndSelect("branch.user", "user")
       .select([
         "product.id",
         "product.name",
@@ -46,7 +46,7 @@ export const productService = {
         "product.description",
         "product.url_cover",
         "branch.id",
-        "user.name", // Nome da filial (via user.name)
+        "user.name",
       ]);
 
     if (branchId) {
@@ -60,10 +60,10 @@ export const productService = {
       name: product.name,
       amount: product.amount,
       description: product.description,
-      url_cover: product.url_cover || undefined, // Trata null como undefined
+      url_cover: product.url_cover || undefined,
       branch: {
         id: product.branch.id,
-        name: product.branch.user.name, // Nome da filial
+        name: product.branch.user.name,
       },
     }));
   },

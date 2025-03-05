@@ -104,9 +104,8 @@ export const movementService = {
         throw new Error("Status inválido para início");
       }
   
-      // Usar o ID do motorista (não o ID do usuário)
       movement.status = MovementStatus.IN_PROGRESS;
-      movement.driver = driver; // Atribui o objeto Driver completo
+      movement.driver = driver;
   
       await transactionalEntityManager.save(movement);
       return movement;
@@ -146,7 +145,6 @@ export const movementService = {
       movement.status = MovementStatus.FINISHED;
       await transactionalEntityManager.save(movement);
   
-      // 6. Buscar ou criar produto na filial de destino
       const destinationProduct = await transactionalEntityManager.findOne(Product, {
         where: {
           name: movement.product.name,

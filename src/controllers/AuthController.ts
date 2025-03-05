@@ -19,10 +19,8 @@ export class AuthController {
       const branchRepository = AppDataSource.getRepository(Branch);
       const driverRepository = AppDataSource.getRepository(Driver);
 
-      // Validação dos dados
       const { email, password } = loginSchema.parse(req.body);
 
-      // Buscar usuário
       const user = await userRepository.findOne({
         where: { email },
         select: ["id", "email", "password_hash", "profile", "name"],
@@ -40,7 +38,6 @@ export class AuthController {
         return;
       }
 
-      // Buscar branchId ou driverId (se aplicável)
       let branchId: number | undefined;
       let driverId: number | undefined;
 
@@ -58,19 +55,16 @@ export class AuthController {
         driverId = driver?.id;
       }
 
-      // Verificar JWT_SECRET
       if (!process.env.JWT_SECRET) {
         throw new Error("Variável de ambiente JWT_SECRET não configurada");
       }
 
-      // Gerar token
       const tokenPayload: Record<string, any> = {
         id: user.id,
         profile: user.profile,
         name: user.name,
       };
 
-      // Adicionar IDs apenas se existirem
       if (branchId) tokenPayload.branchId = branchId;
       if (driverId) tokenPayload.driverId = driverId;
 
@@ -99,7 +93,6 @@ export class AuthController {
       if (error instanceof Error) {
         console.error("Mensagem de erro:", error.message);
         
-        // Erro específico para JWT_SECRET faltando
         if (error.message.includes("JWT_SECRET")) {
           res.status(500).json({ 
             message: "Erro de configuração do servidor",
@@ -108,7 +101,6 @@ export class AuthController {
           return;
         }
       }
-
       res.status(500).json({ 
         message: "Erro interno do servidor",
         details: "Ocorreu um erro inesperado" 

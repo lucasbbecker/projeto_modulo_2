@@ -14,11 +14,11 @@ export const adminMiddleware = async (
   req: Request,
   res: Response,
   next: NextFunction
-): Promise<void> => { // <-- Tipo de retorno explícito
+): Promise<void> => {
   try {
     if (!req.user) {
       res.status(401).json({ message: "Não autenticado." });
-      return; // Encerra a execução
+      return;
     }
 
     const userRepository = AppDataSource.getRepository(User);
@@ -29,12 +29,12 @@ export const adminMiddleware = async (
 
     if (!user || user.profile !== UserProfile.ADMIN) {
       res.status(403).json({ message: "Acesso negado. Somente ADMINs." });
-      return; // Encerra a execução
+      return;
     }
 
-    next(); // Libera o acesso
+    next();
 
   } catch (error) {
-    next(error); // Repassa erros
+    next(error);
   }
 };

@@ -8,5 +8,5 @@ export const createProductSchema = z.object({
 });
 
 export const listProductsSchema = z.object({
-    branch_id: z.number().int().positive().optional(), // Filtro para ADMIN
+    branch_id: z.number().int().positive().optional(),
   });

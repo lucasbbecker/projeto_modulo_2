@@ -47,15 +47,12 @@ export const userService = {
 
     if (!user) throw new Error("Usuário não encontrado");
 
-    // Verifica permissão (mesma lógica anterior)
     if (loggedUser.profile !== UserProfile.ADMIN && loggedUser.id !== userId) {
       throw new Error("Acesso negado");
     }
 
-    // Atualiza campos do User
     if (updateData.name) user.name = updateData.name;
 
-    // Atualiza Driver ou Branch
     if (user.profile === UserProfile.DRIVER && user.driver) {
       if (updateData.full_address)
         user.driver.full_address = updateData.full_address;
@@ -70,13 +67,11 @@ export const userService = {
 
     await userRepository.save(user);
 
-    // Recarrega o usuário com as relações atualizadas
     const updatedUser = await userRepository.findOne({
       where: { id: userId },
       relations: ["driver", "branch"],
     });
 
-    // Monta a resposta com os dados completos
     if (!updatedUser) throw new Error("Erro ao atualizar o usuário");
 
     return {
@@ -114,7 +109,6 @@ export const userService = {
       throw new Error("Acesso negado");
     }
 
-    // Atualiza o status
     userToUpdate.status = newStatus;
     await userRepository.save(userToUpdate);
 
