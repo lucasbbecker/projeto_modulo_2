@@ -11,3 +11,7 @@ export const listMovementsSchema = z.object({
   status: z.nativeEnum(MovementStatus).optional(),
   branch_id: z.number().int().positive().optional(),
 });
+
+export const updateMovementStatusSchema = z.object({
+  status: z.nativeEnum(MovementStatus).optional(),
+});

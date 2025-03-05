@@ -16,4 +16,16 @@ router.get(
   movementsController.listMovements
 )
 
+router.patch(
+  "/:id/start",
+  authMiddleware,
+  movementsController.startMovement
+);
+
+router.patch(
+  "/:id/end",
+  authMiddleware,
+  movementsController.endMovement
+);
+
 export default router;

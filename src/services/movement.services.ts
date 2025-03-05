@@ -2,6 +2,7 @@ import { AppDataSource } from "../data-source";
 import { Movement, MovementStatus } from "../entities/Movement";
 import { Product } from "../entities/Product";
 import { Branch } from "../entities/Branch";
+import { Driver } from "../entities/Driver";
 
 export const movementService = {
   async createMovement(data: {
@@ -84,4 +85,90 @@ export const movementService = {
 
     return query.getMany();
   },
+  startMovement: async (movementId: number, driverId: number) => {
+    return AppDataSource.transaction(async (transactionalEntityManager) => {
+      const driver = await transactionalEntityManager.findOne(Driver, {
+        where: { user: { id: driverId } },
+      });
+  
+      if (!driver) {
+        throw new Error("Motorista não encontrado");
+      }
+  
+      const movement = await transactionalEntityManager.findOne(Movement, {
+        where: { id: movementId },
+      });
+  
+      if (!movement) throw new Error("Movimentação não encontrada");
+      if (movement.status !== MovementStatus.PENDING) {
+        throw new Error("Status inválido para início");
+      }
+  
+      // Usar o ID do motorista (não o ID do usuário)
+      movement.status = MovementStatus.IN_PROGRESS;
+      movement.driver = driver; // Atribui o objeto Driver completo
+  
+      await transactionalEntityManager.save(movement);
+      return movement;
+    });
+  },
+  endMovement: async (movementId: number, userId: number) => {
+    return AppDataSource.transaction(async (transactionalEntityManager) => {
+      const driver = await transactionalEntityManager.findOne(Driver, {
+        where: { user: { id: userId } },
+        relations: ["user"] 
+      });
+  
+      if (!driver) {
+        throw new Error("Motorista não encontrado");
+      }
+  
+      const movement = await transactionalEntityManager.findOne(Movement, {
+        where: { id: movementId },
+        relations: [
+          "driver", 
+          "product", 
+          "destinationBranch",
+          "sourceBranch"
+        ]
+      });
+  
+      if (!movement) throw new Error("Movimentação não encontrada");
+      
+      if (movement.status !== MovementStatus.IN_PROGRESS) {
+        throw new Error("Status inválido para finalização");
+      }
+  
+      if (movement.driver?.id !== driver.id) {
+        throw new Error("Motorista não autorizado");
+      }
+  
+      movement.status = MovementStatus.FINISHED;
+      await transactionalEntityManager.save(movement);
+  
+      // 6. Buscar ou criar produto na filial de destino
+      const destinationProduct = await transactionalEntityManager.findOne(Product, {
+        where: {
+          name: movement.product.name,
+          branch: { id: movement.destinationBranch.id }
+        }
+      });
+  
+      if (destinationProduct) {
+        destinationProduct.amount += movement.quantity;
+        await transactionalEntityManager.save(destinationProduct);
+      } else {
+        const newProduct = transactionalEntityManager.create(Product, {
+          name: movement.product.name,
+          amount: movement.quantity,
+          description: movement.product.description,
+          url_cover: movement.product.url_cover,
+          branch: movement.destinationBranch
+        });
+        await transactionalEntityManager.save(newProduct);
+      }
+  
+      return movement;
+    });
+  }  
 };

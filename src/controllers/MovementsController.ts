@@ -109,4 +109,72 @@ export const movementsController = {
       }
     }
   },
+  async startMovement(req: Request, res: Response): Promise<void> {
+    try {
+      const movementId = parseInt(req.params.id);
+  
+      if (!req.user || req.user.profile !== UserProfile.DRIVER) {
+        res.status(403).json({ message: "Acesso negado" });
+        return;
+      }
+  
+      // Passar o userId (não driverId)
+      const movement = await movementService.startMovement(
+        movementId,
+        req.user.id // ID do usuário logado
+      );
+  
+      res.status(200).json(movement);  
+    } catch (error) {
+      if (error instanceof Error) {
+        switch (error.message) {
+          case "Movimentação não encontrada":
+            res.status(404).json({ message: error.message });
+            break;
+          case "Status inválido para início":
+          case "Motorista não autorizado":
+            res.status(400).json({ message: error.message });
+            break;
+          default:
+            res.status(500).json({ message: "Erro interno" });
+        }
+      } else {
+        res.status(500).json({ message: "Erro interno" });
+      }
+    }
+  },
+
+  async endMovement(req: Request, res: Response): Promise<void> {
+    try {
+      const movementId = parseInt(req.params.id);
+  
+      if (!req.user || req.user.profile !== UserProfile.DRIVER) {
+        res.status(403).json({ message: "Acesso negado" });
+        return;
+      }
+  
+      const movement = await movementService.endMovement(
+        movementId,
+        req.user.id
+      );
+  
+      res.status(200).json(movement);
+    } catch (error) {
+      if (error instanceof Error) {
+        switch (error.message) {
+          case "Movimentação não encontrada":
+            res.status(404).json({ message: error.message });
+            break;
+          case "Status inválido para finalização":
+          case "Motorista não autorizado":
+            res.status(400).json({ message: error.message });
+            break;
+          default:
+            res.status(500).json({ message: "Erro interno" });
+        }
+      } else {
+        res.status(500).json({ message: "Erro interno" });
+      }
+    }
+  },
 };
