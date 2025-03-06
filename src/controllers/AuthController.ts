@@ -1,6 +1,6 @@
-import { Request, Response } from "express";
+import { Request, Response, NextFunction } from "express";
 import { AppDataSource } from "../data-source";
-import { User, UserProfile } from "../entities/User"; // Importe o enum UserProfile
+import { User, UserProfile } from "../entities/User";
 import { Branch } from "../entities/Branch";
 import { Driver } from "../entities/Driver";
 import { compare } from "bcryptjs";
@@ -13,7 +13,7 @@ const loginSchema = z.object({
 });
 
 export class AuthController {
-  async login(req: Request, res: Response): Promise<void> {
+  async login(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const userRepository = AppDataSource.getRepository(User);
       const branchRepository = AppDataSource.getRepository(Branch);
@@ -79,32 +79,7 @@ export class AuthController {
       });
 
     } catch (error) {
-      console.error("Erro durante o login:", error);
-
-      if (error instanceof z.ZodError) {
-        console.log("Erro de validação:", error.errors);
-        res.status(400).json({
-          message: "Dados inválidos",
-          errors: error.errors,
-        });
-        return;
-      }
-
-      if (error instanceof Error) {
-        console.error("Mensagem de erro:", error.message);
-        
-        if (error.message.includes("JWT_SECRET")) {
-          res.status(500).json({ 
-            message: "Erro de configuração do servidor",
-            details: "Chave secreta não configurada" 
-          });
-          return;
-        }
-      }
-      res.status(500).json({ 
-        message: "Erro interno do servidor",
-        details: "Ocorreu um erro inesperado" 
-      });
+      next(error);
     }
   }
 }

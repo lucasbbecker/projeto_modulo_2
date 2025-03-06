@@ -5,6 +5,7 @@ import { Branch } from "../entities/Branch";
 import { hash } from "bcryptjs";
 import { createUserSchema } from "../schemas/userSchemas";
 import { z } from "zod";
+import { AppError } from "../utils/AppError";
 
 export const userService = {
   
@@ -16,7 +17,7 @@ export const userService = {
     });
 
     if (existingUser) {
-      throw new Error("Email já cadastrado");
+      throw new AppError("Email já cadastrado", 409);
     }
 
     const hashedPassword = await hash(body.password, 8);
@@ -76,7 +77,7 @@ export const userService = {
     if (!user) return null;
 
     if (loggedUser.profile !== UserProfile.ADMIN && loggedUser.id !== userId) {
-      throw new Error("Acesso negado");
+      throw new AppError("Acesso negado", 403);
     }
 
     return {
@@ -121,7 +122,7 @@ export const userService = {
       relations: ["driver", "branch"],
     });
 
-    if (!updatedUser) throw new Error("Erro ao atualizar o usuário");
+    if (!updatedUser) throw new AppError("Erro ao atualizar o usuário", 500);
 
     return {
       id: updatedUser.id,
@@ -148,14 +149,15 @@ export const userService = {
     const userToUpdate = await userRepository.findOne({
       where: { id: userId },
     });
-    if (!userToUpdate) throw new Error("Usuário não encontrado");
-
+    if (!userToUpdate) {
+      throw new AppError("Usuário não encontrado", 404);
+    }
     if (loggedUser.profile !== UserProfile.ADMIN) {
-      throw new Error("Acesso negado");
+      throw new AppError("Acesso negado", 403);
     }
 
     if (userToUpdate.id === loggedUser.id) {
-      throw new Error("Acesso negado");
+      throw new AppError("Não pode alterar seu próprio status", 403);
     }
 
     userToUpdate.status = newStatus;
